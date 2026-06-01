@@ -555,16 +555,18 @@ async function cargarDesdeSheets(silencioso=false){
   ];
 
   let text=null;
-  try{
-  for(const proxy of proxies){
-    try{
-      const resp=await fetch(proxy(url),{signal:AbortSignal.timeout(8000)});
-      if(!resp.ok) continue;
-      const t=await resp.text();
-      if(t&&t.includes(',')&&!t.includes('<html')){text=t;break;}
-    }catch(e){continue;}
+try{
+  const resp = await fetch(url);
+
+  if(!resp.ok){
+    throw new Error(`HTTP ${resp.status}`);
   }
-  if(!text) throw new Error('Sin conexión');
+
+  text = await resp.text();
+
+  if(!text){
+    throw new Error('Sin datos');
+  }
   try{
     const rows=parseCSV(text);
     if(rows.length<2) throw new Error('Sin datos');
