@@ -486,6 +486,8 @@ input[type=text]{text-transform:uppercase}
 </div>
 <script>
 const SK='co_v3', SKH='co_hist_v3', SK_SHEETS='co_sheets_url', SK_APPS='co_apps_url';
+const APPS_SCRIPT_URL='https://script.google.com/macros/s/AKfycbwQbF3Mq3TexzEB37JMC6vXp7zL2CibL_qt4P8UqM-2YpRBChQ1ajPrzE0DAI1odBzT/exec';
+const SHEET_URL='https://docs.google.com/spreadsheets/d/e/2PACX-1vT0vwuHkaK1NnbkIjCuEqOeBTcDw__vEEinR6XgaAQ3MaOidKkm4aFmg0kRA4GS3duatHEsgULo9X_N/pub?gid=2090126377&single=true&output=csv';
 
 const DEF={
   pwd:'1313',
@@ -523,19 +525,15 @@ let D=JSON.parse(JSON.stringify(DEF));
 let historial=[];
 let cotActual=null;
 
-(function init(){
+(async function init(){
   try{const r=localStorage.getItem(SK);if(r){const s=JSON.parse(r);if(s.pwd)D.pwd=s.pwd;if(s.molduras?.length)D.molduras=s.molduras;if(s.extras?.length)D.extras=s.extras;}}catch(e){}
   try{const h=localStorage.getItem(SKH);if(h)historial=JSON.parse(h);}catch(e){}
-  // Auto-cargar desde Sheets si hay URL guardada
-  const url=localStorage.getItem(SK_SHEETS);
-  if(url){
-    cargarDesdeSheets(true);
-    // Mostrar badge inmediatamente
-    setTimeout(()=>{
-      const badge=document.getElementById('sheets-sync-badge');
-      if(badge) badge.style.display='inline';
-    },100);
-  }
+  // Garantizar URLs hardcodeadas en localStorage
+  localStorage.setItem(SK_SHEETS, SHEET_URL);
+  localStorage.setItem(SK_APPS, APPS_SCRIPT_URL);
+  await cargarDesdeSheets(true);
+  const badge=document.getElementById('sheets-sync-badge');
+  if(badge) badge.style.display='inline';
 })();
 
 // ── GOOGLE SHEETS ──────────────────────────────────────────────────────────
@@ -557,7 +555,7 @@ function parseCSV(text){
 
 async function cargarDesdeSheets(silencioso=false){
   const urlInput=document.getElementById('sheets-url');
-  let url=urlInput?urlInput.value.trim():localStorage.getItem(SK_SHEETS)||'';
+  let url=(urlInput?urlInput.value.trim():'')||localStorage.getItem(SK_SHEETS)||SHEET_URL;
   if(!url){if(!silencioso)alert('Pega la URL del Sheet publicado.');return;}
 
   // Guardar URL para auto-carga futura
@@ -565,7 +563,7 @@ async function cargarDesdeSheets(silencioso=false){
   if(urlInput) urlInput.value=url;
   // Guardar Apps Script URL si fue ingresada
   const appsInput=document.getElementById('apps-script-url');
-  const appsUrl=appsInput?appsInput.value.trim():localStorage.getItem(SK_APPS)||'';
+  const appsUrl=appsInput?appsInput.value.trim():localStorage.getItem(SK_APPS)||APPS_SCRIPT_URL;
   if(appsUrl) localStorage.setItem(SK_APPS,appsUrl);
 
   if(!url.includes('output=csv')&&!url.includes('format=csv'))
